@@ -32,11 +32,7 @@ class GraphQLWebClientImpl implements GraphQLWebClient {
 
   @Override
   public Mono<GraphQLResponse> post(GraphQLRequest request) {
-    WebClient.RequestBodySpec spec = webClient.post().contentType(MediaType.APPLICATION_JSON);
-    request.getHeaders()
-        .forEach((header, values) -> spec.header(header, values.toArray(new String[0])));
-    return spec.bodyValue(request.getRequestBody())
-        .retrieve()
+    return retrieveResponse(request)
         .bodyToMono(String.class)
         .map(it -> new GraphQLResponse(it, objectMapper));
   }
@@ -54,12 +50,28 @@ class GraphQLWebClientImpl implements GraphQLWebClient {
         .flatMapMany(Flux::fromIterable);
   }
 
+    @Override
+    public Flux<GraphQLResponse> flux(GraphQLRequest request) {
+        return retrieveResponse(request)
+                .bodyToFlux(String.class)
+                .map(it -> new GraphQLResponse(it, objectMapper));
+    }
+
   private Mono<GraphQLResponse> post(String resource, Map<String, Object> variables) {
     GraphQLRequest request = GraphQLRequest.builder()
         .resource(resource)
         .variables(variables)
         .build();
     return post(request);
+  }
+
+  private WebClient.ResponseSpec retrieveResponse(GraphQLRequest request) {
+    WebClient.RequestBodySpec spec = webClient.post().contentType(MediaType.APPLICATION_JSON);
+
+    request.getHeaders()
+            .forEach((header, values) -> spec.header(header, values.toArray(new String[0])));
+
+    return spec.bodyValue(request.getRequestBody()).retrieve();
   }
 
 }

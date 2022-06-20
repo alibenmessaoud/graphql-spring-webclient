@@ -85,3 +85,11 @@ the max in memory size to use:
 ```properties
 spring.codec.max-in-memory-size=10MB
 ``` 
+
+```shell
+./gradlew clean
+
+./gradlew build
+
+./gradlew :graphql-webclient:publishToMavenLocal 
+```
